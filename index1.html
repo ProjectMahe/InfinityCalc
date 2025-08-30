@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InfinityCalc</title>
+<style>
+    /* Reset and basic styles */
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; background: linear-gradient(135deg, #6e8efb, #a777e3); transition: background 0.5s; padding: 20px; }
+    
+    /* Header and attribution */
+    .header { text-align: center; margin-bottom: 20px; }
+    .title { color: white; font-size: 2.5rem; font-weight: 700; margin-bottom: 5px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+    .developer { color: rgba(255,255,255,0.9); font-size: 1rem; margin-bottom: 15px; }
+    .developer a { color: #ffde59; text-decoration: none; transition: all 0.3s; }
+    .developer a:hover { color: white; text-decoration: underline; }
+    
+    /* Calculator container */
+    .calculator { background: #fff; padding: 25px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); width: 100%; max-width: 400px; }
+    
+    /* Display area */
+    .history-display { color: #888; text-align: right; font-size: 0.9em; min-height: 20px; margin-bottom: 5px; overflow: hidden; text-overflow: ellipsis; }
+    .display { background: #222; color: #0f0; font-size: 2em; text-align: right; padding: 20px; border-radius: 10px; margin-bottom: 15px; word-wrap: break-word; min-height: 70px; font-family: 'Courier New', monospace; }
+    .display.error { color: #ff5555; }
+    
+    /* Button grid */
+    .buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    button { padding: 16px; font-size: 1.2em; border: none; border-radius: 10px; cursor: pointer; transition: all 0.2s; background: #f5f5f5; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    button:hover { background: #e0e0e0; transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.15); }
+    button:active { transform: translateY(1px); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .operator { background: #ff9500; color: #fff; }
+    .operator:hover { background: #e68600; }
+    .equals { background: #4caf50; color: #fff; grid-column: span 2; }
+    .equals:hover { background: #388e3c; }
+    .clear, .delete { background: #f44336; color: #fff; }
+    .clear:hover, .delete:hover { background: #d32f2f; }
+    .memory { background: #2196f3; color: #fff; }
+    .memory:hover { background: #1976d2; }
+    .special { background: #9c27b0; color: #fff; }
+    .special:hover { background: #7b1fa2; }
+    
+    /* Dark mode */
+    body.dark { background: linear-gradient(135deg, #232526, #414345); }
+    body.dark .calculator { background: #1e1e1e; }
+    body.dark .display { background: #333; color: #0f0; }
+    body.dark button { background: #2d2d2d; color: #eee; }
+    body.dark button:hover { background: #3d3d3d; }
+    body.dark .title { color: #f0f0f0; }
+    body.dark .developer { color: rgba(240,240,240,0.8); }
+    
+    /* Responsive */
+    @media (max-width: 480px) {
+        .calculator { padding: 15px; }
+        button { padding: 14px; font-size: 1.1em; }
+        .display { font-size: 1.7em; padding: 15px; }
+        .buttons { gap: 8px; }
+        .title { font-size: 2rem; }
+    }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1 class="title">InfinityCalc</h1>
+</div>
+
+<div class="calculator">
+    <div class="history-display" id="history"></div>
+    <div class="display" id="display">0</div>
+    <div class="buttons">
+        <button class="memory" onclick="handleMemory('mc')">MC</button>
+        <button class="memory" onclick="handleMemory('mr')">MR</button>
+        <button class="memory" onclick="handleMemory('m+')">M+</button>
+        <button class="memory" onclick="handleMemory('m-')">M-</button>
+        
+        <button class="special" onclick="handleSpecial('square')">x²</button>
+        <button class="special" onclick="handleSpecial('sqrt')">√</button>
+        <button class="special" onclick="handleSpecial('percent')">%</button>
+        <button class="clear" onclick="clearAll()">AC</button>
+        
+        <button onclick="appendNumber('7')">7</button>
+        <button onclick="appendNumber('8')">8</button>
+        <button onclick="appendNumber('9')">9</button>
+        <button class="operator" onclick="appendOperator('/')">÷</button>
+        
+        <button onclick="appendNumber('4')">4</button>
+        <button onclick="appendNumber('5')">5</button>
+        <button onclick="appendNumber('6')">6</button>
+        <button class="operator" onclick="appendOperator('*')">×</button>
+        
+        <button onclick="appendNumber('1')">1</button>
+        <button onclick="appendNumber('2')">2</button>
+        <button onclick="appendNumber('3')">3</button>
+        <button class="operator" onclick="appendOperator('-')">-</button>
+        
+        <button onclick="appendNumber('0')">0</button>
+        <button onclick="appendDecimal()">.</button>
+        <button class="equals" onclick="calculate()">=</button>
+        <button class="operator" onclick="appendOperator('+')">+</button>
+        
+        <button onclick="appendOperator('(')">(</button>
+        <button onclick="appendOperator(')')">)</button>
+        <button class="special" onclick="handleSpecial('reciprocal')">1/x</button>
+        <button class="delete" onclick="backspace()">⌫</button>
+        
+        <button class="special" onclick="toggleDark()">🌙/☀️</button>
+    </div>
+</div>
+
+  <div class="header">
+    <p class="developer">Developed by <a href="https://www.linkedin.com/in/mahesh-ctrl?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app" target="_blank">Mahesh</a></p>
+  </div>
+
+<script>
+    const display = document.getElementById('display');
+    const historyDisplay = document.getElementById('history');
+    let currentInput = '0';
+    let lastResult = null;
+    let memory = 0;
+    let isNewCalculation = true;
+    
+    // Initialize from localStorage
+    function initializeCalculator() {
+        // Load dark mode preference
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark');
+        }
+        
+        // Load memory value
+        const savedMemory = localStorage.getItem('calculatorMemory');
+        if (savedMemory !== null) {
+            memory = parseFloat(savedMemory);
+        }
+    }
+    
+    function updateDisplay() {
+        display.textContent = currentInput;
+        if (currentInput.length > 12) {
+            display.style.fontSize = '1.5em';
+        } else {
+            display.style.fontSize = '2em';
+        }
+    }
+    
+    function appendNumber(number) {
+        if (isNewCalculation) {
+            currentInput = number;
+            isNewCalculation = false;
+        } else {
+            currentInput = currentInput === '0' ? number : currentInput + number;
+        }
+        updateDisplay();
+    }
+    
+    function appendOperator(operator) {
+        if (isNewCalculation && lastResult !== null) {
+            currentInput = lastResult + operator;
+            isNewCalculation = false;
+        } else {
+            // Prevent multiple operators in a row
+            const lastChar = currentInput.slice(-1);
+            if (['+', '-', '*', '/'].includes(lastChar)) {
+                currentInput = currentInput.slice(0, -1) + operator;
+            } else {
+                currentInput += operator;
+            }
+        }
+        updateDisplay();
+    }
+    
+    function appendDecimal() {
+        if (isNewCalculation) {
+            currentInput = '0.';
+            isNewCalculation = false;
+        } else if (!currentInput.includes('.')) {
+            currentInput += '.';
+        }
+        updateDisplay();
+    }
+    
+    function backspace() {
+        if (currentInput.length > 1) {
+            currentInput = currentInput.slice(0, -1);
+        } else {
+            currentInput = '0';
+            isNewCalculation = true;
+        }
+        updateDisplay();
+    }
+    
+    function clearAll() {
+        currentInput = '0';
+        isNewCalculation = true;
+        historyDisplay.textContent = '';
+        display.classList.remove('error');
+        updateDisplay();
+    }
+    
+    function calculate() {
+        try {
+            // Replace visual operators with JavaScript operators
+            let expression = currentInput
+                .replace(/×/g, '*')
+                .replace(/÷/g, '/');
+            
+            // Validate expression
+            if (!isValidExpression(expression)) {
+                throw new Error('Invalid expression');
+            }
+            
+            // Save expression to history
+            historyDisplay.textContent = currentInput + ' =';
+            
+            // Evaluate expression
+            const result = eval(expression);
+            
+            // Handle very large or very small numbers
+            if (Math.abs(result) > 1e12) {
+                currentInput = result.toExponential(6);
+            } else if (Math.abs(result) < 1e-6 && result !== 0) {
+                currentInput = result.toExponential(6);
+            } else {
+                // Round to avoid floating point precision issues
+                currentInput = parseFloat(result.toPrecision(12)).toString();
+            }
+            
+            lastResult = currentInput;
+            isNewCalculation = true;
+            display.classList.remove('error');
+        } catch (error) {
+            currentInput = 'Error';
+            display.classList.add('error');
+            isNewCalculation = true;
+        }
+        updateDisplay();
+    }
+    
+    function isValidExpression(expr) {
+        // Check for empty expression
+        if (!expr) return false;
+        
+        // Check for balanced parentheses
+        let balance = 0;
+        for (let char of expr) {
+            if (char === '(') balance++;
+            if (char === ')') balance--;
+            if (balance < 0) return false; // More closing than opening parentheses
+        }
+        if (balance !== 0) return false; // Unbalanced parentheses
+        
+        // Check for consecutive operators
+        if (/([+\-*/]{2,})/.test(expr)) return false;
+        
+        // Check for invalid characters
+        if (!/^[0-9+\-*/().\s]+$/.test(expr)) return false;
+        
+        return true;
+    }
+    
+    function handleMemory(action) {
+        try {
+            switch(action) {
+                case 'mc': // Memory Clear
+                    memory = 0;
+                    break;
+                case 'mr': // Memory Recall
+                    currentInput = memory.toString();
+                    isNewCalculation = true;
+                    break;
+                case 'm+': // Memory Add
+                    memory += parseFloat(eval(currentInput));
+                    break;
+                case 'm-': // Memory Subtract
+                    memory -= parseFloat(eval(currentInput));
+                    break;
+            }
+            // Save memory to localStorage
+            localStorage.setItem('calculatorMemory', memory.toString());
+            updateDisplay();
+        } catch (error) {
+            currentInput = 'Error';
+            display.classList.add('error');
+            updateDisplay();
+        }
+    }
+    
+    function handleSpecial(func) {
+        try {
+            let value = parseFloat(currentInput);
+            
+            switch(func) {
+                case 'square':
+                    currentInput = (value * value).toString();
+                    historyDisplay.textContent = `${value}² =`;
+                    break;
+                case 'sqrt':
+                    if (value < 0) throw new Error('Negative root');
+                    currentInput = Math.sqrt(value).toString();
+                    historyDisplay.textContent = `√${value} =`;
+                    break;
+                case 'percent':
+                    currentInput = (value / 100).toString();
+                    historyDisplay.textContent = `${value}% =`;
+                    break;
+                case 'reciprocal':
+                    if (value === 0) throw new Error('Division by zero');
+                    currentInput = (1 / value).toString();
+                    historyDisplay.textContent = `1/(${value}) =`;
+                    break;
+            }
+            
+            isNewCalculation = true;
+            display.classList.remove('error');
+            updateDisplay();
+        } catch (error) {
+            currentInput = 'Error';
+            display.classList.add('error');
+            updateDisplay();
+        }
+    }
+    
+    function toggleDark() {
+        document.body.classList.toggle('dark');
+        // Save preference to localStorage
+        localStorage.setItem('darkMode', document.body.classList.contains('dark'));
+    }
+    
+    // Keyboard support
+    document.addEventListener('keydown', (e) => {
+        if (/[0-9]/.test(e.key)) appendNumber(e.key);
+        if (e.key === '.') appendDecimal();
+        if (['+', '-', '*', '/'].includes(e.key)) appendOperator(e.key);
+        if (e.key === 'Enter' || e.key === '=') calculate();
+        if (e.key === 'Backspace') backspace();
+        if (e.key === 'Escape') clearAll();
+        if (e.key === '(') appendOperator('(');
+        if (e.key === ')') appendOperator(')');
+    });
+    
+    // Initialize calculator
+    initializeCalculator();
+    updateDisplay();
+</script>
+
+</body>
+</html>
